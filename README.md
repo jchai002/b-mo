@@ -1,0 +1,129 @@
+# Welcome to bPanel!
+
+This is the official repo for the [bPanel project](http://bpanel.org),
+a full featured, enterprise level GUI for your Bcoin Bitcoin node.
+
+## Dependencies
+
+- npm >5.7.1
+- node >8.x
+
+NOTE: It is important to be using at least this version of `npm`
+because of a bug that removes `node_modules` that are installed from
+GitHub and doesn't reinstall them which breaks the build
+
+## Setup Your Environment With Docker
+This is primarily a setup for development purposes
+(though it could be used in production with some modification).
+
+To spin up your webapp, server, a bcoin node on regtest, and generate
+50 regtest BTC for your primary wallet, clone & navigate to this repo then:
+1. Run `npm install` to create a secrets.env file.
+2. Run `docker-compose up -d` to start everything.
+3. Navigate to [localhost:5000](http://localhost:5000) to see your webapp.
+Requests to `/node` will get forwarded to your bcoin node.
+
+For local development, you run just the bcoin docker container (`docker-compose up -d bcoin`)
+and then `npm run start:dev` (or `npm run start:poll` for Mac since webpack's watch behaves strangely
+on mac sometimes) to run the app and app server from your local box.
+
+## Updating Plugins
+bPanel comes pre-installed with a default theme called [`Genesis Theme`](https://github.com/bpanel-org/genesis-theme),
+that bundles together a set of useful starter plugins and a custom theme called bMenace.
+If you want, you can disable the Genesis Theme by removing it from the list in `pluginsConfig.js`,
+but if you want to keep using _some_ of the plugins from the theme, feel free to add
+them individually to your config!
+
+To install plugins, simply add the name as a string to the `plugins` array in `pluginsConfig.js`.
+Make sure to match the name to the package name on npm
+(`localPlugins` can be used for plugins you are developing in the `plugins/local` directory).
+Once you save the file, bPanel will automatically install the plugins and rebuild.
+
+Note that if you have some plugins or themes being loaded,
+this can take around 30 seconds as `npm install` is run for you.
+
+## Customizing Your Docker Environment
+There are two docker services in the compose file: `app` and `bcoin`.
+The app service runs the web server which serves the static files
+for the front end and relays messages to a bcoin node.
+You can use custom configs to connect to an existing node,
+or use the bcoin docker service to spin up a bcoin node that the webapp will connect to.
+
+### Configuration
+Configurations are shared between the two docker containers using ENV files.
+
+Your bcoin node will expect an API key given to it.
+If you are connecting to an existing node, you can set an API key
+by adding it to the `secrets.env` file and set `BCOIN_API_KEY=[YOUR-AWESOME-KEY]`.
+This key can be any value you want (but if you are running a node with real Bitcoins, make sure it's secure!).
+__NOTE: DO NOT CHECK THIS FILE IN TO VERSION CONTROL.__
+
+If you run `npm install` and there is no `secrets.env` present,
+one will automatically be generated for you with a cryptographically secure api key.
+
+The configs are managed through environment variables set in a `bcoin.env` file
+(this is not ignored by git, so make sure to only put sensitive information in the `secrets.env` file).
+These get used by both the app and bcoin containers.
+NOTE: runtime environment vars will override the values set in the env files.
+
+If you want to connect to an existing node on a remote server,
+update the environment configs to point to your remote node.
+To deploy in a docker container run:
+
+```bash
+docker-compose up app
+```
+
+Otherwise, for local development, run
+```bash
+npm run start:poll
+```
+(For Linux you can run `npm run start:dev` instead)
+
+### Bcoin Setup Scripts
+Setup scripts are also supported. This will allow you to run scripts on your
+node for a repeatable and predictable environment for testing or development.
+
+Three circumstances need to be met to run a script:
+1. There needs to be a js file to run in the `scripts` directory that exports a function to run
+2. You need to pass the name of this file (including the extension)
+as an environment variable named `BCOIN_INIT_SCRIPT` in the docker-compose
+3. There should be no walletdb in the container.
+This makes sure that a setup script doesn't overwrite your data
+if you're mapping volumes or if you restart a container.
+
+These checks are done in the `docker-bcoin-init.js` which sets up a node
+based on the configs described above.
+Setup scripts will also be passed the bcoin node object that has been created.
+
+### Persistent DBs
+By default, the bcoin and wallet DBs persist in `~/.bcoin_bpanel`.
+If you want docker to start bcoin with a fresh DB, comment out the `.bcoin`
+volume in `docker-compose.yml` then run `docker-compose up -d`.
+
+### Building images
+Uncomment the relevant `build:` sections in `docker-compose.yml`
+for the services you want to build, then run `docker-compose build`
+
+## Extending bPanel
+The bPanel UI is built entirely around plugins.
+All visual elements can be extended or overridden via the plugin system
+including the header, footer, sidebar, and main panel/view element.
+To get started making your own plugin, use the
+[bPanel-cli](http://bpanel.org/docs/plugin-started.html)
+
+### Server extensions
+The simplest thing to do, is to create your own server file that includes `server/index.js`.
+```javascript
+const bpanel = require('./index.js')({
+	network: 'main', // Put bPanel configs here (optional)
+});
+const app = require('express')();
+app.use( /* Put your own middleware here */ );
+app.use( bpanel.app );
+app.listen();
+```
+
+## License
+
+- Copyright (c) 2018, The bPanel Devs (MIT License).

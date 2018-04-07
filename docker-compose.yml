@@ -1,0 +1,61 @@
+version: '3'
+services:
+  app:
+    image: bpanel/bpanel
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+      - "8000:8000"
+    env_file:
+      - ./bcoin.env
+      - ./secrets.env
+    environment:
+      BCOIN_HOST: bcoin
+    ## Uncomment to build
+    # build: .
+    volumes:
+      ## Mapping to local files- Handy for dev
+      ## Uncomment for server dev
+      - ./server:/usr/src/app/server
+      # - ./scripts:/usr/src/app/scripts
+      ## Uncomment for webapp dev
+      - ./webapp:/usr/src/app/webapp
+    ## Only MacOSX users need --watch-poll
+    command: server --dev --watch-poll
+
+  bcoin:
+    image: bpanel/bcoin
+    restart: unless-stopped
+    env_file:
+      - ./bcoin.env
+      - ./secrets.env
+    ## Uncomment to build
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile-bcoin
+    #   # args:
+    #   #   repo: https://github.com/bcoin-org/bcoin.git
+    #   #   branch: master
+    #   #   rebuild: 0
+    ports:
+      ## Comment these if they conflict with something else you're running.
+      #-- Mainnet
+      - "8333:8333"
+      - "8332:8332" # RPC
+      - "8334:8334" # Wallet
+      #-- Testnet
+      - "18333:18333"
+      - "18332:18332" # RPC
+      - "18334:18334" # Wallet
+      #-- Regtest
+      - "48444:48444"
+      - "48332:48332" # RPC
+      - "48334:48334" # Wallet
+      #-- Simnet
+      - "18555:18555"
+      - "18556:18556" # RPC
+      - "18558:18558" # Wallet
+    volumes:
+      - ./scripts:/code/scripts
+      ## Comment to make bcoin chain and wallet database NOT persistant
+      - ~/.bcoin_bpanel:/code/.bcoin
