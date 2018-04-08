@@ -5,9 +5,11 @@
   "description": "GUI application to interact with a Bcoin Bitcoin node",
   "main": "server/index.js",
   "scripts": {
-    "start": "node server",
+    "start": "node ./server/b-mo.server",
+    "start:repl": "node ./express-charge/cli/local-dev-repl",
     "start:dev": "node server --dev",
     "start:poll": "node server --dev --watch-poll",
+    "start:repo": "node server --dev --watch-poll",
     "lint": "eslint .",
     "test": "npm run lint && karma start --single-run",
     "karma": "karma start --autoWatch",

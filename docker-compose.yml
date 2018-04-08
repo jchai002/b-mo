@@ -1,27 +1,39 @@
 version: '3'
+volumes:
+  data:
 services:
-  app:
-    image: bpanel/bpanel
-    restart: unless-stopped
+  mongo:
+    image: mongo:3.6
     ports:
-      - "5000:5000"
-      - "8000:8000"
-    env_file:
-      - ./bcoin.env
-      - ./secrets.env
-    environment:
-      BCOIN_HOST: bcoin
-    ## Uncomment to build
-    # build: .
+     - "27017:27017"
+     - "28017:28017"
+    command: "mongod --profile=1 --setParameter 'logComponentVerbosity={command: 5}' --port 27017"  # hack to prevent issues with not enough memory
     volumes:
-      ## Mapping to local files- Handy for dev
-      ## Uncomment for server dev
-      - ./server:/usr/src/app/server
-      # - ./scripts:/usr/src/app/scripts
-      ## Uncomment for webapp dev
-      - ./webapp:/usr/src/app/webapp
-    ## Only MacOSX users need --watch-poll
-    command: server --dev --watch-poll
+      - data:/data/db
+  # app:
+  #   image: bpanel/bpanel
+  #   restart: unless-stopped
+  #   ports:
+  #     - "5000:5000"
+  #     - "8000:8000"
+  #   env_file:
+  #     - ./bcoin.env
+  #     - ./secrets.env
+  #   environment:
+  #     BCOIN_HOST: bcoin
+  #   ## Uncomment to build
+  #   # build: .
+  #   volumes:
+  #     ## Mapping to local files- Handy for dev
+  #     ## Uncomment for server dev
+  #     - ./server:/usr/src/app/server
+  #     # - ./scripts:/usr/src/app/scripts
+  #     ## Uncomment for webapp dev
+  #     - ./webapp:/usr/src/app/webapp
+  #     - ./express-charge:/usr/src/app/express-charge
+  #   ## Only MacOSX users need --watch-poll
+  #   command: server/b-mo.server.js --dev --watch-poll
+  #   # command: server --dev --watch-poll
 
   bcoin:
     image: bpanel/bcoin
