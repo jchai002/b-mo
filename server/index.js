@@ -20,7 +20,7 @@ if (require.main === module) {
     // Watch this server
     return require('nodemon')({
       script: 'server/index.js',
-      watch: ['server', 'b-mo'],
+      watch: ['server'],
       args: [poll ? '--watch-poll' : '--watch'],
       legacyWatch: poll,
       ext: 'js'
