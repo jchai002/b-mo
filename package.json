@@ -11,12 +11,17 @@
     "prepublish": "make babel",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["bpanel", "bcoin", ""],
+  "keywords": [
+    "bpanel",
+    "bcoin",
+    ""
+  ],
   "author": "",
   "license": "MIT",
   "dependencies": {
     "babel-cli": "^6.26.0",
     "babel-plugin-transform-runtime": "^6.23.0",
+    "moment": "^2.22.0",
     "semantic-ui-css": "^2.3.1",
     "semantic-ui-react": "^0.79.1"
   },
