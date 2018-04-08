@@ -1,6 +1,7 @@
 const bpanel = require('./index');
 const constructServiceBroker = require('../express-charge/services/service-broker');
 const { EVENTS } = require('./b-mo-constants');
+const expressApp = require('express')();
 const {
   BROKER_ACTIONS
 } = require('../express-charge/services/events-and-services-and-actions');
@@ -14,9 +15,16 @@ const main = async () => {
     walletClient,
     bsock
   } = await bpanel();
+  console.log('Waiting for bpanel...');
   await ready;
+  console.log('Starting broker...');
   const broker = await constructServiceBroker({ bcoinWallet: walletClient });
-  await attachSocketHandlers(bsock, broker);
+  console.log('Attaching socket handlers...');
+  attachSocketHandlers(bsock, broker);
+  console.log('Starting broker...');
+  await broker.start();
+  expressApp.use(app);
+  expressApp.listen(5000, () => console.log('listening on 5000'));
 };
 
 main();
@@ -31,40 +39,42 @@ function attachSocketHandlers(bsock, broker) {
   // },
   bsock.on('socket', async socket => {
     const hardCodedUser = await broker.call(BROKER_ACTIONS.GET_LATEST_USER);
+    const user = await broker.call(BROKER_ACTIONS.GET_USER_ACCOUNT, {
+      userAccountId: hardCodedUser.userAccountId
+    });
+    socket.fire('USER_AUTH', user);
 
-    socket.fire('USER_AUTH', hardCodedUser);
+    socket.bind('BMO.SEND_PAYMENT', async (things, xxxxx) => {
+      // setInterval(() => socket.fire('USER_AUTH', hardCodedUser), 1000)
 
-    socket.bind(
-      EVENTS.SEND_PAYMENT,
-      async ({
-        type,
-        payer: { chargeAccountId: payerChargeAccountId },
-        payee: { chargeAccountId: payeeChargeAccontId },
-        amount
-      }) => {
-        const payeeBcoinAccount = await broker.call(
-          BROKER_ACTIONS.GET_BCOIN_ACCOUNT,
-          { accountName: payeeChargeAccontId }
-        );
+      // {
+      //   type,
+      //   payer: { chargeAccountId: payerChargeAccountId },
+      //   payee: { chargeAccountId: payeeChargeAccontId },
+      //   amount
+      // }
+      const payeeBcoinAccount = await broker.call(
+        BROKER_ACTIONS.GET_BCOIN_ACCOUNT,
+        { accountName: payeeChargeAccontId }
+      );
 
-        if (!payeeBcoinAccount) {
-          throw new Error('Payee account doesnt exist');
-        }
-
-        const { receiveAddress } = payeeBcoinAccount;
-
-        const brokerResponse = await broker.call(
-          BROKER_ACTIONS.CREATE_BCOIN_TRANSACTION,
-          {
-            accountName: payerChargeAccountId,
-            amount,
-            targetAddress: receiveAddress
-          }
-        );
-
-        return brokerResponse;
+      if (!payeeBcoinAccount) {
+        throw new Error('Payee account doesnt exist');
       }
-    );
+
+      const { receiveAddress } = payeeBcoinAccount;
+
+      const brokerResponse = await broker.call(
+        BROKER_ACTIONS.CREATE_BCOIN_TRANSACTION,
+        {
+          accountName: payerChargeAccountId,
+          amount,
+          targetAddress: receiveAddress
+        }
+      );
+
+      return brokerResponse;
+    });
 
     socket.bind(
       EVENTS.PAYMENT_RECEIVED,

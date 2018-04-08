@@ -5,6 +5,7 @@
   "description": "GUI application to interact with a Bcoin Bitcoin node",
   "main": "server/index.js",
   "scripts": {
+    "_start": "node ./server",
     "start": "node ./server/b-mo.server",
     "start:repl": "node ./express-charge/cli/local-dev-repl",
     "start:dev": "node server --dev",

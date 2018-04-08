@@ -33,20 +33,18 @@ if (require.main === module) {
 }
 
 // Init bPanel
-module.exports = (config, noApp) => {
+module.exports = config => {
   // Always start webpack
-  if (!noApp) {
-    require('nodemon')({
-      script: './node_modules/.bin/webpack',
-      watch: ['webapp/config/pluginsConfig.js'],
-      args: webpackArgs,
-      legacyWatch: poll
+  require('nodemon')({
+    script: './node_modules/.bin/webpack',
+    watch: ['webapp/config/pluginsConfig.js'],
+    args: webpackArgs,
+    legacyWatch: poll
+  })
+    .on('crash', () => {
+      process.exit(1);
     })
-      .on('crash', () => {
-        process.exit(1);
-      })
-      .on('quit', process.exit);
-  }
+    .on('quit', process.exit);
 
   if (!config) {
     // Load from ENV, secrets.env, & bcoin.env
