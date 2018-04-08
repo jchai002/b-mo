@@ -1,9 +1,4 @@
 'use strict';
-const EVENTS = disallowUndefinedProperties('EVENTS', {
-  SEND_PAYMENT: 'SEND_PAYMENT',
-  PAYMENT_RECEIVED: 'PAYMENT_RECEIVED',
-  PAYMENT_CONFIRMED: 'PAYMENT_CONFIRMED'
-});
 
 module.exports.EVENTS = EVENTS;
 
